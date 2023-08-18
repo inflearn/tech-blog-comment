@@ -1,0 +1,49 @@
+name: GitHub Discussions Notifier
+
+on:
+  discussion_comment:
+    types: [created]
+
+jobs:
+  send-create-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack Message
+        uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          DISCUSSION_URL: ${{ github.event.discussion.html_url }}
+          DISCUSSION_TITLE: ${{ github.event.discussion.title }}
+          DISCUSSION_BODY: ${{ github.event.discussion.body }}
+          COMMENT_URL: ${{ github.event.comment.html_url }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          USER_URL: ${{ github.event.comment.user.html_url }}
+          USER_NAME: ${{ github.event.comment.user.login }}
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {
+              "attachments": [
+                {
+                  "fallback": "기술 블로그에 새로운 댓글이 달렸습니다.",
+                  "color": "#2eb886",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "${{ github.event.comment.user.login }}님이 <${{ github.event.discussion.html_url }}|${{ github.event.discussion.title }}>에 댓글을 달았습니다."
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": ${{ toJSON(github.event.comment.body) }}
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+
